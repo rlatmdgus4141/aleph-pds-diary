@@ -1,0 +1,517 @@
+{
+  "schema_version": 2,
+  "task": "T06",
+  "database": "server Cloudflare D1 / SQLite",
+  "timezone": "Asia/Seoul",
+  "units": {
+    "expected_minutes": "integer minutes",
+    "actual_minutes": "integer minutes"
+  },
+  "dates": {
+    "plan_and_due_dates": "YYYY-MM-DD, Seoul calendar date",
+    "event_times": "UTC RFC3339 saved; entered/displayed as Asia/Seoul",
+    "overdue": "status != done AND due_date < today Asia/Seoul; missing due_date excluded"
+  },
+  "tables": {
+    "completions": {
+      "columns": [
+        {
+          "name": "task_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": true
+        },
+        {
+          "name": "active",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "default": "1",
+          "primary_key": false
+        },
+        {
+          "name": "completed_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        }
+      ],
+      "foreign_keys": [
+        {
+          "from": "task_id",
+          "table": "tasks",
+          "to": "id"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_completions_1",
+          "unique": true,
+          "columns": [
+            "task_id"
+          ]
+        }
+      ]
+    },
+    "execution_logs": {
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": true
+        },
+        {
+          "name": "task_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "request_key",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "started_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "ended_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "actual_minutes",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "blocker",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": "''",
+          "primary_key": false
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        }
+      ],
+      "foreign_keys": [
+        {
+          "from": "task_id",
+          "table": "tasks",
+          "to": "id"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "logs_task",
+          "unique": false,
+          "columns": [
+            "task_id"
+          ]
+        },
+        {
+          "name": "log_request_unique",
+          "unique": true,
+          "columns": [
+            "request_key"
+          ]
+        },
+        {
+          "name": "sqlite_autoindex_execution_logs_1",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    "plans": {
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": true
+        },
+        {
+          "name": "title",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "start_date",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "end_date",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "priority",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "success",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": "''",
+          "primary_key": false
+        },
+        {
+          "name": "expected_minutes",
+          "sqlite_type": "INTEGER",
+          "not_null": false,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "draft",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "default": "0",
+          "primary_key": false
+        },
+        {
+          "name": "version",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "default": "1",
+          "primary_key": false
+        },
+        {
+          "name": "origin_reflection",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        }
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_plans_1",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    "reflections": {
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": true
+        },
+        {
+          "name": "plan_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "insight",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "next_plan_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        }
+      ],
+      "foreign_keys": [
+        {
+          "from": "next_plan_id",
+          "table": "plans",
+          "to": "id"
+        },
+        {
+          "from": "plan_id",
+          "table": "plans",
+          "to": "id"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_reflections_1",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    "plan_revisions": {
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": true
+        },
+        {
+          "name": "plan_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "version",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "snapshot",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        }
+      ],
+      "foreign_keys": [
+        {
+          "from": "plan_id",
+          "table": "plans",
+          "to": "id"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "revision_plan_version",
+          "unique": true,
+          "columns": [
+            "plan_id",
+            "version"
+          ]
+        },
+        {
+          "name": "sqlite_autoindex_plan_revisions_1",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    "settings": {
+      "columns": [
+        {
+          "name": "key",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": true
+        },
+        {
+          "name": "value",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        }
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_settings_1",
+          "unique": true,
+          "columns": [
+            "key"
+          ]
+        }
+      ]
+    },
+    "tasks": {
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": true
+        },
+        {
+          "name": "plan_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "title",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "due_date",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "priority",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "tags",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": "'[]'",
+          "primary_key": false
+        },
+        {
+          "name": "expected_minutes",
+          "sqlite_type": "INTEGER",
+          "not_null": false,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "status",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": "'open'",
+          "primary_key": false
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "default": null,
+          "primary_key": false
+        },
+        {
+          "name": "deleted_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "default": null,
+          "primary_key": false
+        }
+      ],
+      "foreign_keys": [
+        {
+          "from": "plan_id",
+          "table": "plans",
+          "to": "id"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "tasks_plan_active",
+          "unique": false,
+          "columns": [
+            "plan_id",
+            "deleted_at"
+          ]
+        },
+        {
+          "name": "sqlite_autoindex_tasks_1",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    }
+  },
+  "aggregation": {
+    "scope": "selected plan, tasks.deleted_at IS NULL; optional inclusive due_date bounds",
+    "plan_count": "number of tasks in scope",
+    "completed_count": "current status done",
+    "blocked_count": "distinct task with any nonblank execution blocker",
+    "expected": "sum task expected_minutes; missing estimate treated as 0 and count visibly warned",
+    "actual": "sum all execution actual_minutes for scoped tasks",
+    "difference": "actual - expected",
+    "empty": 0
+  },
+  "history": "immutable plan_revisions snapshot each version; optimistic version guard",
+  "completion_idempotency": "completions.task_id PRIMARY KEY; transactional insert/upsert plus task status update",
+  "log_idempotency": "execution_logs.request_key UNIQUE",
+  "privacy": "public, unauthenticated read and write; only user-approved public records",
+  "seed_provenance": "3 real records supplied by user on 2026-10-02; container plan is draft; missing planned fields remain NULL. No invented future tasks."
+}

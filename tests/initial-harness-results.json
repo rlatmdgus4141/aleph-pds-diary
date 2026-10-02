@@ -1,0 +1,102 @@
+{
+  "executed_at": "2026-10-02T01:09:03.083Z",
+  "environment": "v24.19.0 node:sqlite / service integration (not browser or production D1)",
+  "passed": 21,
+  "total": 23,
+  "checks": [
+    {
+      "name": "실제 제공 3건 / 327분 / 막힘 1건 가져오기",
+      "status": "PASS"
+    },
+    {
+      "name": "초기 가져오기 반복 시 중복 없음",
+      "status": "PASS"
+    },
+    {
+      "name": "계획 생성·필드 저장",
+      "status": "PASS"
+    },
+    {
+      "name": "계획 수정 전후 버전 보존",
+      "status": "PASS"
+    },
+    {
+      "name": "오래된 계획 버전 수정 거부",
+      "status": "PASS"
+    },
+    {
+      "name": "할 일 5개·마감·우선순위·태그·예상",
+      "status": "PASS"
+    },
+    {
+      "name": "할 일 수정",
+      "status": "PASS"
+    },
+    {
+      "name": "완료 동시 요청: 완료 1건·집계 1증가",
+      "status": "FAIL",
+      "reason": "Error: cannot start a transaction within a transaction"
+    },
+    {
+      "name": "지연에서 완료 제외",
+      "status": "PASS"
+    },
+    {
+      "name": "완료 되돌리기·재완료 중복 없음",
+      "status": "PASS"
+    },
+    {
+      "name": "실행 저장은 계획·예상 값을 변경하지 않음",
+      "status": "PASS"
+    },
+    {
+      "name": "실행 요청 재전송은 1건만 저장",
+      "status": "PASS"
+    },
+    {
+      "name": "막힘 여러 실행은 할 일 1개로 집계",
+      "status": "PASS"
+    },
+    {
+      "name": "시간대 없는 시각·음수·잘못된 종료 거부",
+      "status": "PASS"
+    },
+    {
+      "name": "실제 시간은 경과시간 초과 불가",
+      "status": "PASS"
+    },
+    {
+      "name": "기간 집계 대상과 근거 일치",
+      "status": "PASS"
+    },
+    {
+      "name": "삭제된 할 일과 실행시간 집계 제외",
+      "status": "PASS"
+    },
+    {
+      "name": "빈 계획 집계 0",
+      "status": "PASS"
+    },
+    {
+      "name": "스크립트 모양 글자는 원문 저장",
+      "status": "PASS"
+    },
+    {
+      "name": "돌아보기 한 줄이 다음 계획과 연결",
+      "status": "PASS"
+    },
+    {
+      "name": "같은 돌아보기 재요청 중복 없음",
+      "status": "PASS"
+    },
+    {
+      "name": "서울 자정 경계",
+      "status": "PASS"
+    },
+    {
+      "name": "재조회와 내보내기 ID·날짜·값 유지",
+      "status": "FAIL",
+      "reason": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  {\n    completions: [\n+     [Object: null prototype] {\n-     {\n        active: 1,\n        completed_at: '2026-10-01T12:30:00.000Z',\n        task_id: 'provided-interview'\n      },\n+     [Object: null prototype] {\n-     {\n        active: 1,\n        completed_at: '2026-10-01T14:30:00.000Z',\n        task_id: 'provided-reading'\n      },\n+     [Object: null prototype] {\n-     {\n        active: 1,\n        completed_at: '2026-10-02T00:57:00.000Z',\n        task_id: 'provided-aleph5'\n      },\n+     [Object: null prototype] {\n-     {\n        active: 1,\n        completed_at: '2026-10-02T01:09:03.074Z',\n        task_id: 'task0'\n      }\n    ],\n    logs: [\n+     [Object: null prototype] {\n-     {\n        actual_minutes: 180,\n        blocker: '',\n        created_at: '2026-10-02T01:09:03.051Z',\n        ended_at: '2026-10-01T12:30:00.000Z',\n        id: 'log-provided-interview',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        actual_minutes: 110,\n        blocker: '',\n        created_at: '2026-10-02T01:09:03.051Z',\n        ended_at: '2026-10-01T14:30:00.000Z',\n        id: 'log-provided-reading',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        actual_minutes: 37,\n        blocker: '클로드와 GPT의 연결에서 좀 헤맸습니다.',\n        created_at: '2026-10-02T01:09:03.051Z',\n        ended_at: '2026-10-02T00:57:00.000Z',\n        id: 'log-provided-aleph5',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        actual_minutes: 25,\n        blocker: '설정 문제',\n        created_at: '2026-10-02T01:09:03.075Z',\n        ended_at: '2026-10-02T00:30:00.000Z',\n        id: 'a961f779-ca21-4c61-8358-26fb4912d45c',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        actual_minutes: 25,\n        blocker: '설정 문제',\n        created_at: '2026-10-02T01:09:03.076Z',\n        ended_at: '2026-10-02T00:30:00.000Z',\n        id: '7edb4075-9855-4a41-a61b-e43af9550322',\n...\n    plans: [\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.051Z',\n        draft: 1,\n        end_date: null,\n        expected_minutes: null,\n        id: 'provided-records-plan',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.069Z',\n        draft: 0,\n        end_date: '2026-10-08',\n        expected_minutes: 90,\n        id: 'plan-test',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.079Z',\n        draft: 0,\n        end_date: '2026-10-08',\n        expected_minutes: 60,\n        id: 'xss-test',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.079Z',\n        draft: 0,\n        end_date: '2026-10-08',\n        expected_minutes: 60,\n        id: 'next-plan',\n...\n    reflections: [\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.079Z',\n        id: 'reflection-test',\n        insight: '시작 전 환경 확인',\n        next_plan_id: 'next-plan',\n        plan_id: 'plan-test'\n...\n    revisions: [\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.051Z',\n        id: 'initial-revision',\n        plan_id: 'provided-records-plan',\n        snapshot: '{\"id\":\"provided-records-plan\",\"title\":\"취업 준비와 ALEPH 학습 관리\",\"start_date\":null,\"end_date\":null,\"priority\":null,\"success\":\"\",\"expected_minutes\":null,\"draft\":1,\"version\":1,\"created_at\":\"2026-10-02T01:09:03.051Z\",\"updated_at\":\"2026-10-02T01:09:03.051Z\"}',\n        version: 1\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.069Z',\n        id: 'v1-plan-test',\n        plan_id: 'plan-test',\n        snapshot: '{\"id\":\"plan-test\",\"title\":\"검사용 계획\",\"start_date\":\"2026-10-01\",\"end_date\":\"2026-10-08\",\"priority\":\"high\",\"success\":\"검사 완료\",\"expected_minutes\":60,\"draft\":0,\"version\":1,\"origin_reflection\":null,\"created_at\":\"2026-10-02T01:09:03.069Z\",\"updated_at\":\"2026-10-02T01:09:03.069Z\"}',\n        version: 1\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.070Z',\n        id: '38c15a5c-a350-40dd-9a38-0e9c8397852f',\n        plan_id: 'plan-test',\n        snapshot: '{\"id\":\"plan-test\",\"title\":\"수정된 계획\",\"start_date\":\"2026-10-01\",\"end_date\":\"2026-10-08\",\"priority\":\"high\",\"success\":\"검사 완료\",\"expected_minutes\":90,\"draft\":0,\"version\":2,\"origin_reflection\":null,\"created_at\":\"2026-10-02T01:09:03.069Z\",\"updated_at\":\"2026-10-02T01:09:03.070Z\"}',\n        version: 2\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.079Z',\n        id: 'v1-xss-test',\n        plan_id: 'xss-test',\n        snapshot: '{\"id\":\"xss-test\",\"title\":\"<script>alert(1)</script>\",\"start_date\":\"2026-10-01\",\"end_date\":\"2026-10-08\",\"priority\":\"high\",\"success\":\"검사 완료\",\"expected_minutes\":60,\"draft\":0,\"version\":1,\"origin_reflection\":null,\"created_at\":\"2026-10-02T01:09:03.079Z\",\"updated_at\":\"2026-10-02T01:09:03.079Z\"}',\n        version: 1\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.079Z',\n        id: 'v1-next-plan',\n        plan_id: 'next-plan',\n        snapshot: '{\"id\":\"next-plan\",\"title\":\"검사용 계획\",\"start_date\":\"2026-10-01\",\"end_date\":\"2026-10-08\",\"priority\":\"high\",\"success\":\"검사 완료\",\"expected_minutes\":60,\"draft\":0,\"version\":1,\"origin_reflection\":\"reflection-test\",\"created_at\":\"2026-10-02T01:09:03.079Z\",\"updated_at\":\"2026-10-02T01:09:03.079Z\"}',\n        version: 1\n...\n    tasks: [\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.051Z',\n        deleted_at: null,\n        due_date: null,\n        expected_minutes: null,\n        id: 'provided-interview',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.051Z',\n        deleted_at: null,\n        due_date: null,\n        expected_minutes: null,\n        id: 'provided-reading',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.051Z',\n        deleted_at: null,\n        due_date: null,\n        expected_minutes: null,\n        id: 'provided-aleph5',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.072Z',\n        deleted_at: null,\n        due_date: '2026-01-01',\n        expected_minutes: 20,\n        id: 'task0',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.072Z',\n        deleted_at: '2026-10-02T01:09:03.077Z',\n        due_date: '2026-01-01',\n        expected_minutes: 10,\n        id: 'task1',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.072Z',\n        deleted_at: null,\n        due_date: '2099-01-01',\n        expected_minutes: 10,\n        id: 'task2',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.072Z',\n        deleted_at: null,\n        due_date: '2099-01-01',\n        expected_minutes: 10,\n        id: 'task3',\n...\n      },\n+     [Object: null prototype] {\n-     {\n        created_at: '2026-10-02T01:09:03.072Z',\n        deleted_at: null,\n        due_date: '2099-01-01',\n        expected_minutes: 10,\n        id: 'task4',\n"
+    }
+  ]
+}
