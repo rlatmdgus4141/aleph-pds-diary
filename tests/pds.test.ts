@@ -1,7 +1,7 @@
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync,writeFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
-import {mutate,snapshot,aggregate,kstDate} from '../lib/pds-service.ts';
+import {mutate,snapshot,aggregate,kstDate} from './t06-service.ts';
 const sqlite=new DatabaseSync(':memory:');sqlite.exec('PRAGMA foreign_keys=ON');sqlite.exec(readFileSync('drizzle/0000_strong_frightful_four.sql','utf8'));
 function prep(sql:string,params:any[]=[]):any{return {sql,params,bind:(...p:any[])=>prep(sql,p),all:async()=>({results:sqlite.prepare(sql).all(...params)}),first:async()=>sqlite.prepare(sql).get(...params)||null,run:async()=>({meta:{changes:sqlite.prepare(sql).run(...params).changes}})}}
 const db:any={prepare:prep,batch:async(qs:any[])=>{sqlite.exec('BEGIN');try{const out=[];for(const q of qs)out.push({meta:{changes:sqlite.prepare(q.sql).run(...q.params).changes}});sqlite.exec('COMMIT');return out}catch(e){sqlite.exec('ROLLBACK');throw e}}};

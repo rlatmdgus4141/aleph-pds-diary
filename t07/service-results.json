@@ -1,0 +1,195 @@
+{
+  "at": "2026-10-02T03:00:05.835Z",
+  "environment": "Local Node SQLite service integration; NOT browser or production HTTP; synthetic accounts and observation only",
+  "passed": 23,
+  "total": 23,
+  "checks": [
+    {
+      "name": "가입 2계정 / 같은 비밀번호의 bcrypt salt 차이",
+      "status": "PASS"
+    },
+    {
+      "name": "중복 가입 거절",
+      "status": "PASS"
+    },
+    {
+      "name": "잘못된 비밀번호와 없는 아이디의 동일 안내",
+      "status": "PASS"
+    },
+    {
+      "name": "로그인 / Secure HttpOnly SameSite / 서버 해시만 저장",
+      "status": "PASS"
+    },
+    {
+      "name": "각 계정 자료 생성 / 목록 분리",
+      "status": "PASS"
+    },
+    {
+      "name": "test_a → tb read 거절 404 / 상대 자료 불변",
+      "status": "PASS"
+    },
+    {
+      "name": "test_a → tb update 거절 404 / 상대 자료 불변",
+      "status": "PASS"
+    },
+    {
+      "name": "test_a → tb delete 거절 404 / 상대 자료 불변",
+      "status": "PASS"
+    },
+    {
+      "name": "test_b → ta read 거절 404 / 상대 자료 불변",
+      "status": "PASS"
+    },
+    {
+      "name": "test_b → ta update 거절 404 / 상대 자료 불변",
+      "status": "PASS"
+    },
+    {
+      "name": "test_b → ta delete 거절 404 / 상대 자료 불변",
+      "status": "PASS"
+    },
+    {
+      "name": "타 계정 ID를 생성 ID로 사용해도 기존 자료 불변",
+      "status": "PASS"
+    },
+    {
+      "name": "본문 owner_id 위조 무시",
+      "status": "PASS"
+    },
+    {
+      "name": "미로그인 직접 요청 거절 401",
+      "status": "PASS"
+    },
+    {
+      "name": "외부 Origin 거절 403",
+      "status": "PASS"
+    },
+    {
+      "name": "완료 중복 요청: 기록 1건 / 집계 1회",
+      "status": "PASS"
+    },
+    {
+      "name": "로그아웃 전 성공 / 같은 세션 재사용 거절",
+      "status": "PASS"
+    },
+    {
+      "name": "비밀번호 변경 시 모든 세션 폐기",
+      "status": "PASS"
+    },
+    {
+      "name": "만료 세션 거절",
+      "status": "PASS"
+    },
+    {
+      "name": "내보내기 인증 비밀값 제외",
+      "status": "PASS"
+    },
+    {
+      "name": "JSON 가져오기 / 타 계정과 ID 충돌 없음 / 재가져오기 거절",
+      "status": "PASS"
+    },
+    {
+      "name": "관찰 시작 전 예상 고정 / 실행 전 대상 확정 / 당일 중복 방지",
+      "status": "PASS"
+    },
+    {
+      "name": "계정 삭제: 자료·세션·관찰 제거 / 상대 유지",
+      "status": "PASS"
+    }
+  ],
+  "evidence": [
+    {
+      "test_hashes": [
+        "$2b$12$IyvnQW8rJfU43k/qMjGImO7T83KeYy1GlGQAInh4JsGvy5Zh0GYbG",
+        "$2b$12$kEWyKwXmXFY3TqEzkOpP/uswyGuR5beqj3yu0xyEddAtoqV1xuYv."
+      ],
+      "plaintext": "[REDACTED]",
+      "note": "Disposable local test accounts only; no actual user credentials."
+    },
+    {
+      "method": "GET",
+      "url": "/api/pds?task_id=tb",
+      "headers": {
+        "Cookie": "[REDACTED]"
+      },
+      "request": null,
+      "status": 404,
+      "actor": "test_a",
+      "before_after": "unchanged"
+    },
+    {
+      "method": "POST",
+      "url": "/api/pds",
+      "headers": {
+        "Cookie": "[REDACTED]"
+      },
+      "request": {
+        "action": "task-update",
+        "id": "tb"
+      },
+      "status": 404,
+      "actor": "test_a",
+      "before_after": "unchanged"
+    },
+    {
+      "method": "POST",
+      "url": "/api/pds",
+      "headers": {
+        "Cookie": "[REDACTED]"
+      },
+      "request": {
+        "action": "task-delete",
+        "id": "tb"
+      },
+      "status": 404,
+      "actor": "test_a",
+      "before_after": "unchanged"
+    },
+    {
+      "method": "GET",
+      "url": "/api/pds?task_id=ta",
+      "headers": {
+        "Cookie": "[REDACTED]"
+      },
+      "request": null,
+      "status": 404,
+      "actor": "test_b",
+      "before_after": "unchanged"
+    },
+    {
+      "method": "POST",
+      "url": "/api/pds",
+      "headers": {
+        "Cookie": "[REDACTED]"
+      },
+      "request": {
+        "action": "task-update",
+        "id": "ta"
+      },
+      "status": 404,
+      "actor": "test_b",
+      "before_after": "unchanged"
+    },
+    {
+      "method": "POST",
+      "url": "/api/pds",
+      "headers": {
+        "Cookie": "[REDACTED]"
+      },
+      "request": {
+        "action": "task-delete",
+        "id": "ta"
+      },
+      "status": 404,
+      "actor": "test_b",
+      "before_after": "unchanged"
+    },
+    {
+      "url": "/api/pds",
+      "method": "GET",
+      "session": "same [REDACTED] value",
+      "before": 200,
+      "after_logout": 401
+    }
+  ]
+}

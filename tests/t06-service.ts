@@ -11,16 +11,7 @@ function planInput(x:Row){const a=date(x.start_date,true),b=date(x.end_date,true
 function taskInput(x:Row){let tags=x.tags;if(typeof tags==='string')tags=tags.split(',').map((t:string)=>t.trim()).filter(Boolean);if(!Array.isArray(tags)||tags.length>12)throw new Error('태그는 12개 이하로 입력해 주세요.');return {title:str(x.title,'할 일'),due_date:date(x.due_date,true),priority:priority(x.priority),tags:JSON.stringify(tags.map(t=>str(t,'태그',30))),expected_minutes:minutes(x.expected_minutes)}}
 const q=(db:Store,sql:string,...values:any[])=>db.prepare(sql).bind(...values);
 async function rows(db:Store,table:string){return (await db.prepare('SELECT * FROM '+table).all()).results}
-export async function snapshot(db:Store,owner:string){const plans=(await q(db,'SELECT * FROM plans WHERE owner_id=?',owner).all()).results;
- const tasks=(await q(db,'SELECT t.* FROM tasks t JOIN plans p ON p.id=t.plan_id WHERE p.owner_id=?',owner).all()).results;
- const logs=(await q(db,'SELECT l.* FROM execution_logs l JOIN tasks t ON t.id=l.task_id JOIN plans p ON p.id=t.plan_id WHERE p.owner_id=?',owner).all()).results;
- const completions=(await q(db,'SELECT c.* FROM completions c JOIN tasks t ON t.id=c.task_id JOIN plans p ON p.id=t.plan_id WHERE p.owner_id=?',owner).all()).results;
- const reflections=(await q(db,'SELECT r.* FROM reflections r JOIN plans p ON p.id=r.plan_id WHERE p.owner_id=?',owner).all()).results;
- const revisions=(await q(db,'SELECT r.* FROM plan_revisions r JOIN plans p ON p.id=r.plan_id WHERE p.owner_id=?',owner).all()).results;
- return {plans,tasks,logs,completions,reflections,revisions,today:kstDate(),timezone:'Asia/Seoul',unit:'minutes'};}
-export class AccessError extends Error {status=404;constructor(){super('자료를 찾을 수 없습니다.')}}
-export async function ownedPlan(db:Store,owner:string,pid:string){const p=await q(db,'SELECT * FROM plans WHERE id=? AND owner_id=?',pid,owner).first();if(!p)throw new AccessError();return p}
-export async function ownedTask(db:Store,owner:string,tid:string){const t=await q(db,'SELECT t.* FROM tasks t JOIN plans p ON p.id=t.plan_id WHERE t.id=? AND p.owner_id=?',tid,owner).first();if(!t)throw new AccessError();return t}
+export async function snapshot(db:Store){const [plans,tasks,logs,completions,reflections,revisions]=await Promise.all(['plans','tasks','execution_logs','completions','reflections','plan_revisions'].map(t=>rows(db,t)));return {plans,tasks,logs,completions,reflections,revisions,today:kstDate(),timezone:'Asia/Seoul',unit:'minutes'}}
 export function aggregate(data:Row,planId:string,from='',to=''){
  const tasks=data.tasks.filter((t:Row)=>!t.deleted_at&&t.plan_id===planId&&(!from||(t.due_date&&t.due_date>=from))&&(!to||(t.due_date&&t.due_date<=to)));
  const ids=new Set(tasks.map((t:Row)=>t.id));const logs=data.logs.filter((l:Row)=>ids.has(l.task_id));
@@ -30,21 +21,20 @@ export function aggregate(data:Row,planId:string,from='',to=''){
 }
 async function ensureTask(db:Store,taskId:string){const t=await q(db,'SELECT * FROM tasks WHERE id=? AND deleted_at IS NULL',taskId).first();if(!t)throw new Error('할 일을 찾을 수 없습니다. 새로고침해 주세요.');return t}
 function completionQueries(db:Store,taskId:string,at:string){return [q(db,'INSERT INTO completions(task_id,active,completed_at) VALUES (?,1,?) ON CONFLICT(task_id) DO UPDATE SET active=1, completed_at=excluded.completed_at WHERE completions.active=0',taskId,at),q(db,"UPDATE tasks SET status='done',updated_at=? WHERE id=? AND deleted_at IS NULL AND status<>'done'",at,taskId)]}
-export async function mutate(db:Store,x:Row,owner:string){const at=now();const action=str(x.action,'동작',40);let result:Row={};
- if(!owner)throw new AccessError();
- if(action==='plan-update')await ownedPlan(db,owner,x.id);
- if(action==='reflect')await ownedPlan(db,owner,x.source_plan_id);
- if(action==='task-create')await ownedPlan(db,owner,x.plan_id);
- if(['task-update','task-delete','complete','reopen'].includes(action))await ownedTask(db,owner,x.id);
- if(action==='log'){await ownedTask(db,owner,x.task_id);x={...x,request_key:owner+':'+str(x.request_key,'중복 방지 키',100)}}
- // A client-provided ID must never collide with another owner's row.
- if(['plan-create','reflect','task-create'].includes(action)&&x.id){const table=action==='task-create'?'tasks':'plans';const old=await q(db,'SELECT id FROM '+table+' WHERE id=?',x.id).first();if(old){if(table==='tasks')await ownedTask(db,owner,x.id);else await ownedPlan(db,owner,x.id);return {id:x.id}}}
- if(action==='reflect'&&x.reflection_id&&await q(db,'SELECT id FROM reflections WHERE id=?',x.reflection_id).first())throw new AccessError();
+export async function mutate(db:Store,x:Row){const at=now();const action=str(x.action,'동작',40);let result:Row={};
+ if(action==='bootstrap'){
+  if(await q(db,'SELECT value FROM settings WHERE key=?','initial-import-v1').first())return {imported:false};
+  const p={id:'provided-records-plan',title:'취업 준비와 ALEPH 학습 관리',start_date:null,end_date:null,priority:null,success:'',expected_minutes:null,draft:1,version:1,created_at:at,updated_at:at};
+  const jobs=[q(db,'INSERT OR IGNORE INTO plans(id,title,draft,created_at,updated_at) VALUES (?,?,1,?,?)',p.id,p.title,at,at),q(db,'INSERT OR IGNORE INTO plan_revisions(id,plan_id,version,snapshot,created_at) VALUES (?,?,1,?,?)','initial-revision',p.id,JSON.stringify(p),at)];
+  const given=[['provided-interview','SKT 공채 면접 준비','2026-10-01T18:30:00+09:00','2026-10-01T21:30:00+09:00',180,''],['provided-reading','면접 준비 독서','2026-10-01T21:40:00+09:00','2026-10-01T23:30:00+09:00',110,''],['provided-aleph5','ALEPH 과제 5 수행','2026-10-02T09:20:00+09:00','2026-10-02T09:57:00+09:00',37,'클로드와 GPT의 연결에서 좀 헤맸습니다.']];
+  for(const [tid,title,start,end,actual,blocker] of given){jobs.push(q(db,"INSERT OR IGNORE INTO tasks(id,plan_id,title,status,created_at,updated_at) VALUES (?,?,?,'done',?,?)",tid,p.id,title,at,at),q(db,'INSERT OR IGNORE INTO execution_logs(id,task_id,request_key,started_at,ended_at,actual_minutes,blocker,created_at) VALUES (?,?,?,?,?,?,?,?)','log-'+tid,tid,'import-'+tid,new Date(start as string).toISOString(),new Date(end as string).toISOString(),actual,blocker,at),q(db,'INSERT OR IGNORE INTO completions(task_id,active,completed_at) VALUES (?,1,?)',tid,new Date(end as string).toISOString()))}
+  jobs.push(q(db,'INSERT OR IGNORE INTO settings(key,value) VALUES (?,?)','initial-import-v1',at));await db.batch(jobs);return {imported:true};
+ }
  if(action==='plan-create'||action==='reflect'){
   const p=planInput(x),pid=str(x.id||id(),'계획 ID',100);const reflect=action==='reflect';let rid:string|null=null;
   if(reflect){rid=str(x.reflection_id||id(),'돌아보기 ID',100);str(x.insight,'개선점',2000);if(!await q(db,'SELECT id FROM plans WHERE id=?',x.source_plan_id).first())throw new Error('원래 계획이 없습니다.')}
   const snap={id:pid,...p,version:1,origin_reflection:rid,created_at:at,updated_at:at};
-  const jobs=[q(db,'INSERT OR IGNORE INTO plans(id,owner_id,title,start_date,end_date,priority,success,expected_minutes,draft,version,origin_reflection,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,0,1,?,?,?)',pid,owner,p.title,p.start_date,p.end_date,p.priority,p.success,p.expected_minutes,rid,at,at),q(db,'INSERT OR IGNORE INTO plan_revisions(id,plan_id,version,snapshot,created_at) VALUES (?,?,1,?,?)','v1-'+pid,pid,JSON.stringify(snap),at)];
+  const jobs=[q(db,'INSERT OR IGNORE INTO plans(id,title,start_date,end_date,priority,success,expected_minutes,draft,version,origin_reflection,created_at,updated_at) VALUES (?,?,?,?,?,?,?,0,1,?,?,?)',pid,p.title,p.start_date,p.end_date,p.priority,p.success,p.expected_minutes,rid,at,at),q(db,'INSERT OR IGNORE INTO plan_revisions(id,plan_id,version,snapshot,created_at) VALUES (?,?,1,?,?)','v1-'+pid,pid,JSON.stringify(snap),at)];
   if(reflect)jobs.push(q(db,'INSERT OR IGNORE INTO reflections(id,plan_id,insight,next_plan_id,created_at) VALUES (?,?,?,?,?)',rid,x.source_plan_id,str(x.insight,'개선점',2000),pid,at));
   await db.batch(jobs);result={id:pid};
  } else if(action==='plan-update'){
@@ -66,7 +56,7 @@ export async function mutate(db:Store,x:Row,owner:string){const at=now();const a
  } else if(action==='log'){
   await ensureTask(db,x.task_id);const start=str(x.started_at,'시작 시각',40),end=str(x.ended_at,'종료 시각',40);if(!/(Z|[+-]\d\d:\d\d)$/.test(start)||!/(Z|[+-]\d\d:\d\d)$/.test(end)||!Number.isFinite(Date.parse(start))||!Number.isFinite(Date.parse(end))||Date.parse(end)<Date.parse(start))throw new Error('시작·종료 시각과 시간대를 확인해 주세요.');
   const elapsed=(Date.parse(end)-Date.parse(start))/60000;const actual=minutes(x.actual_minutes);if(actual!>elapsed)throw new Error('실제 작업시간은 시작~종료 경과시간보다 길 수 없습니다.');
-  const key=str(x.request_key,'중복 방지 키',200),blocker=str(x.blocker??'','막힌 이유',2000,false);const jobs=[q(db,'INSERT OR IGNORE INTO execution_logs(id,task_id,request_key,started_at,ended_at,actual_minutes,blocker,created_at) VALUES (?,?,?,?,?,?,?,?)',id(),x.task_id,key,new Date(start).toISOString(),new Date(end).toISOString(),actual,blocker==='없음'?'':blocker,at)];
+  const key=str(x.request_key,'중복 방지 키',100),blocker=str(x.blocker??'','막힌 이유',2000,false);const jobs=[q(db,'INSERT OR IGNORE INTO execution_logs(id,task_id,request_key,started_at,ended_at,actual_minutes,blocker,created_at) VALUES (?,?,?,?,?,?,?,?)',id(),x.task_id,key,new Date(start).toISOString(),new Date(end).toISOString(),actual,blocker==='없음'?'':blocker,at)];
   if(x.complete===true)jobs.push(...completionQueries(db,x.task_id,at));await db.batch(jobs);
  } else throw new Error('지원하지 않는 요청입니다.');
  return result;

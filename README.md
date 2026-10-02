@@ -1,39 +1,35 @@
-# 플랜두씨 다이어리 · ALEPH T06
+# 플랜두씨 다이어리 · T07
 
-로그인 없이 이용하는 공개 Plan–Do–See 다이어리입니다. 링크를 아는 방문자는 자료를 읽고 편집할 수 있습니다. 비밀값·민감한 개인정보를 넣지 마세요.
+T06 최종 제출 커밋 `f791fc84302f06b767e9b04f9a183b82265a6498`에서 이어지는 인증·계정별 자료 분리·실제 5일 관찰 앱입니다.
 
-## 기능
-- 계획의 기간·우선순위·성공 기준·예상 시간과 변경 이력
-- 할 일 생성·수정·완료·되돌리기·소프트 삭제, 검색·상태/우선순위/태그 필터·결정적 정렬
-- 실행 시작/종료 UTC 저장, 서울 시간 입력/표시, 실제 분·막힌 이유 별도 저장
-- 완료 PK 및 실행 request_key UNIQUE로 중복 방지
-- 선택 계획의 마감일 기간별 집계 및 숫자별 근거 기록
-- 돌아보기 개선점으로 다음 계획 생성
-- 서버 D1 저장, 전체 데이터 JSON 내보내기
+- 공개 URL에는 로그인/가입 화면만 표시됩니다. 개인 기록 API는 세션이 없으면 401입니다.
+- bcryptjs 3.0.3 cost 12, DB 세션, 12시간 만료, 로그아웃/비밀번호 변경 시 서버 세션 폐기.
+- 기존 T06 전체 내보내기 JSON은 새 계정으로 로그인한 뒤 빈 다이어리에서 가져옵니다. 최초 가입자가 기존 공개 자료를 자동 소유하지 않습니다.
+- 계획·할 일·실행·돌아보기 및 5일 관찰을 내 계정에서 사용합니다. 전체 JSON 내보내기와 비밀번호 확인 후 계정/연결 자료 삭제를 제공합니다.
+- 기존 배포: https://plan-do-see-diary.rlatmdgus4141.chatgpt.site
 
-## 데이터의 출처와 남은 입력
-사용자가 직접 제공한 실행 3건을 최초 방문 시 서버에 한 번 저장합니다: 2026-10-01 면접 준비 180분, 독서 110분, 2026-10-02 ALEPH 과제5 37분. 첫 두 건의 막힘은 없고, 마지막 한 건에 사용자가 준 막힌 이유를 저장했습니다.
-사용자가 아직 계획 기간·우선순위·성공 기준·예상 시간, 할 일별 예정 마감/예상을 제공하지 않아 NULL/빈 값과 draft=1로 남겼습니다. 3개 활동은 실행 기록을 연결하기 위한 완료 할 일로 가져옵니다. 미래 할 일 2개를 꾸며 넣지 않았습니다. 실제 계획 1개와 실제 할 일 5개 조건은 사용자가 추가 입력해야 완성됩니다.
+자세한 선택 이유·소스 흐름·검증·한계는 `t07/AUTH_IMPLEMENTATION.md`를 읽으세요.
+`contracts/pds-schema-v2.json`은 T06 계약이며 T07 추가 계약은 `contracts/pds-schema-v3.json`입니다.
 
-## 실행과 검사
-Node.js 24.x, pnpm 사용. `pnpm install --frozen-lockfile` 후 `pnpm run dev`.
-Cloudflare D1 바인딩 DB가 필요합니다. `.openai/hosting.json`은 논리 바인딩만 선언합니다. 비밀키를 브라우저에 넣지 않습니다.
+## 검증
 
 ```sh
-node --experimental-strip-types tests/pds.test.ts
+pnpm install --frozen-lockfile
 pnpm exec tsc --noEmit
-pnpm run build
+node --experimental-strip-types tests/t07.test.ts
 ```
 
-로컬 D1은 build 이후 다음을 최초 1회 실행합니다 (동일 마이그레이션 중복 적용 금지).
-```sh
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_strong_frightful_four.sql
-```
-호스팅 플랫폼에서 production 마이그레이션을 적용합니다. 스키마 정본 설명은 `contracts/pds-schema-v2.json`입니다.
+T06의 `tests/pds.test.ts`는 `tests/t06-service.ts`의 당시 서비스와 초기 마이그레이션을 검사하는 보존용입니다. 현재 인증 검증은 `tests/t07.test.ts`와 `t07/service-results.json`을 봅니다.
 
-## 검사 범위
-`tests/results.json`: 23개 서버 로직/SQLite 통합 검사. 초기 검사 모형의 두 오류(중첩 트랜잭션 모형, 객체 prototype 비교)는 `tests/initial-harness-results.json`에 보존하고 모형 수정 후 재검사했습니다. 테스트 데이터는 메모리 SQLite 안에만 존재하며 실제 사용자 DB로 배포되지 않습니다.
-실제 브라우저 UI·스크립트 입력 실행 여부·WebMCP 등록 동작 검사는 환경에 지원되는 브라우저 제어 경로가 없어 미실행입니다. React 텍스트 렌더링과 SQL 바인딩을 사용하며 `dangerouslySetInnerHTML`·eval은 사용하지 않습니다. 사용자 브라우저에서 저장·새로고침·내보내기 및 근거 숫자 클릭을 확인해야 합니다.
+## 배포
 
-## 집계 규칙
-계획 수는 선택 계획의 지우지 않은 할 일 수, 완료 수는 현재 done 수입니다. 지연은 서울 오늘보다 이전 마감의 미완료 할 일, 막힘은 이유가 있는 실행 기록을 가진 할 일 수입니다. 예상 합계는 할 일 예상 분의 합계이며 미입력은 0으로 계산하되 개수를 경고합니다. 실제 합계는 대상 할 일의 모든 실행 기록 합계, 차이는 실제-예상입니다. 기간 필터는 할 일 마감일 양끝 포함이며 필터 지정 시 마감 미입력은 제외됩니다.
+Cloudflare Workers 호환 Vinext + D1. `.openai/hosting.json`은 기존 Sites 프로젝트/논리 DB 연결을 보존합니다. Sites 배포 흐름으로 생성된 `drizzle/*.sql` 마이그레이션을 순서대로 적용합니다. 이미 적용한 마이그레이션을 다시 실행하거나 고치지 마세요.
+
+## 실제 사용자가 해야 할 일
+
+1. 본인만 아는 비밀번호로 가입·로그인. 채팅이나 제출물에 비밀번호를 적지 않기.
+2. T06 JSON을 가져와 5개 할 일, 3개 실행, 327분, 수정/돌아보기 연결을 확인.
+3. 작업 전 오늘 관찰 대상 확정, 실행 기록 입력, 당일 관찰 마감.
+4. 2일차 후 규칙 하나 변경, 실제 다른 날짜 5일 완료, 최신 JSON과 설명서 제출.
+
+아직 수행하지 않은 5일 관찰·사용자 브라우저 검증은 완료로 간주하지 않습니다.

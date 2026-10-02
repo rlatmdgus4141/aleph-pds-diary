@@ -1,0 +1,1 @@
+CREATE INDEX `plans_owner` ON `plans` (`owner_id`);

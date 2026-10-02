@@ -8,6 +8,20 @@
       "when": 1790903295812,
       "tag": "0000_strong_frightful_four",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790909910793,
+      "tag": "0001_amused_cyclops",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790910046358,
+      "tag": "0002_far_warpath",
+      "breakpoints": true
     }
   ]
 }
