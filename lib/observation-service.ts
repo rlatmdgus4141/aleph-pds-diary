@@ -1,7 +1,7 @@
 import {type Store,type Row,snapshot,kstDate} from './pds-service.ts';
 import {stmt,HttpError} from './auth-service.ts';
 export const observationSpec={question:'할 일의 예상 시간을 정하는 규칙을 바꾸면, 하루 예상 시간과 실제 사용 시간의 차이가 줄어드는가?',metric:'하루 예상 시간 합계와 실제 사용 시간 합계의 절대 차이',unit:'분',timezone:'Asia/Seoul',week_start:'월요일',before:'1~2일차에는 작업 시작 전에 각 할 일의 예상 시간을 내 판단으로 정하고, 별도의 여유 시간을 더하지 않는다. 확정한 예상 시간은 실제 소요 시간을 본 뒤 덮어쓰지 않는다.',calculation:'작업 전 확정한 대상의 예상 시간 합계와 그날 실제 시간 합계의 절대 차이. 미완료 대상도 포함. 미작업 확인은 0분, 알 수 없는 값은 누락으로 두고 지표와 평균에서 제외하며 유효 일수를 표시. 같은 실행 ID는 한 번만 합산. 다른 ID의 중복은 원본 확인 후 정정 사유 기록. 큰 실제 값은 제외하지 않고 이유 기록. 중간 반올림 없이 평균만 소수 첫째 자리로 반올림. 자정을 넘기는 실행은 날짜별 분할 입력.'};
-export async function observationSnapshot(db:Store,uid:string){return {rules:await stmt(db,'SELECT * FROM observation_rules WHERE user_id=?',uid).first(),days:(await stmt(db,'SELECT * FROM observations WHERE user_id=? ORDER BY ordinal',uid).all()).results,spec:observationSpec}}
+export async function observationSnapshot(db:Store,uid:string){return {rules:await stmt(db,'SELECT * FROM observation_rules WHERE user_id=?',uid).first(),days:(await stmt(db,'SELECT * FROM observations WHERE user_id=? ORDER BY ordinal',uid).all()).results,cancellations:(await stmt(db,'SELECT * FROM observation_cancellations WHERE user_id=? ORDER BY cancelled_at',uid).all()).results,spec:observationSpec}}
 export async function observe(db:Store,uid:string,x:Row){const at=new Date().toISOString(),today=kstDate(at),state=await observationSnapshot(db,uid),days:Row[]=state.days;
  if(x.action==='change'){
  if(days.length!==2||days.some(d=>!d.finished_at)||state.rules?.change_json)throw new HttpError(409,'2일차 마감 후, 3일차 시작 전에 한 번 변경해 주세요.');
@@ -13,10 +13,30 @@ export async function observe(db:Store,uid:string,x:Row){const at=new Date().toI
  if(days.length>=5||days.some(d=>!d.finished_at)||days.some(d=>d.date===today))throw new HttpError(409,'하루에 한 번, 이전 관찰을 마친 뒤 시작해 주세요.');
  if(days.length===2&&!state.rules?.change_json)throw new HttpError(409,'3일차 전에 계획 규칙 변경을 먼저 기록해 주세요.');
  const data=await snapshot(db,uid);if(!Array.isArray(x.task_ids)||!x.task_ids.length)throw new HttpError(400,'관찰할 할 일을 선택해 주세요.');
- const selected=data.tasks.filter((t:Row)=>x.task_ids.includes(t.id)&&!t.deleted_at&&t.expected_minutes!=null);if(selected.length!==new Set(x.task_ids).size)throw new HttpError(400,'할 일과 예상 시간을 확인해 주세요.');
+ const selected=data.tasks.filter((t:Row)=>x.task_ids.includes(t.id)&&!t.deleted_at&&t.expected_minutes!=null&&t.status==='open');if(selected.length!==new Set(x.task_ids).size)throw new HttpError(400,'선택한 할 일이 완료·삭제됐거나 예상 시간이 없습니다. 목록을 새로 확인해 주세요.');
  if(data.logs.some((l:Row)=>x.task_ids.includes(l.task_id)&&kstDate(l.started_at)===today))throw new HttpError(409,'오늘 이미 실행 기록이 있는 할 일은 사전에 계획을 고정할 수 없습니다.');
  const baseline=selected.map((t:Row)=>({id:t.id,title:t.title,expected_minutes:t.expected_minutes})),expected=selected.reduce((s:number,t:Row)=>s+t.expected_minutes,0);
  await db.batch([stmt(db,'INSERT OR IGNORE INTO observation_rules(user_id,spec,created_at) VALUES (?,?,?)',uid,JSON.stringify(observationSpec),at),stmt(db,'INSERT INTO observations(id,user_id,date,ordinal,baseline,expected,started_at) VALUES (?,?,?,?,?,?,?)',crypto.randomUUID(),uid,today,days.length+1,JSON.stringify(baseline),expected,at)]);return {ok:true};
+ }
+ if(x.action==='cancel'){
+ const day=days.find(d=>d.id===x.id&&!d.finished_at);if(!day||day.date!==today)throw new HttpError(409,'오늘 시작한 미마감 관찰만 취소할 수 있습니다.');
+ if(x.before_work!==true||typeof x.reason!=='string'||!x.reason.trim()||x.reason.length>2000)throw new HttpError(400,'아직 작업하지 않았는지 확인하고 취소 사유를 입력해 주세요.');
+ const cid=crypto.randomUUID();const result=await db.batch([
+ stmt(db,"INSERT INTO observation_cancellations(id,user_id,day_id,original_json,reason,cancelled_at) SELECT ?,user_id,id,?,?,? FROM observations WHERE id=? AND user_id=? AND finished_at IS NULL AND NOT EXISTS (SELECT 1 FROM execution_logs l JOIN json_each(observations.baseline) b ON l.task_id=json_extract(b.value,'$.id') WHERE l.created_at>=observations.started_at)",cid,JSON.stringify(day),x.reason.trim(),at,day.id,uid),
+ stmt(db,'DELETE FROM observations WHERE id=? AND user_id=? AND finished_at IS NULL AND EXISTS (SELECT 1 FROM observation_cancellations WHERE id=?)',day.id,uid,cid)
+ ]);if(result[0].meta.changes!==1)throw new HttpError(409,'실행 기록이 있거나 이미 마감된 관찰은 취소할 수 없습니다.');return {ok:true};
+ }
+ if(x.action==='exclude-order'){
+ const day=days.find(d=>d.id===x.id&&!d.finished_at);if(!day||day.date!==today)throw new HttpError(409,'오늘의 미마감 관찰만 시작 순서 오류로 제외할 수 있습니다.');
+ if(x.preserve_records!==true||typeof x.reason!=='string'||!x.reason.trim()||x.reason.length>2000)throw new HttpError(400,'실제 기록 보존을 확인하고 제외 사유를 입력해 주세요.');
+ const data=await snapshot(db,uid),ids=new Set(JSON.parse(day.baseline).map((t:Row)=>t.id));
+ const logs=data.logs.filter((l:Row)=>ids.has(l.task_id)&&kstDate(l.started_at)===day.date);
+ if(!logs.some((l:Row)=>Date.parse(l.started_at)<Math.floor(Date.parse(day.started_at)/60000)*60000))throw new HttpError(409,'관찰 시작보다 앞선 당일 실행 기록이 없습니다. 정상 관찰은 이 방법으로 제외할 수 없습니다.');
+ const cid=crypto.randomUUID(),original={...day,exclusion_kind:'start_order',log_snapshot:logs};
+ const result=await db.batch([
+ stmt(db,"INSERT INTO observation_cancellations(id,user_id,day_id,original_json,reason,cancelled_at) SELECT ?,user_id,id,?,?,? FROM observations WHERE id=? AND user_id=? AND finished_at IS NULL AND EXISTS (SELECT 1 FROM execution_logs l JOIN json_each(observations.baseline) b ON l.task_id=json_extract(b.value,'$.id') WHERE date(l.started_at,'+9 hours')=observations.date AND julianday(l.started_at)<julianday(strftime('%Y-%m-%dT%H:%M:00Z',observations.started_at)))",cid,JSON.stringify(original),x.reason.trim(),at,day.id,uid),
+ stmt(db,'DELETE FROM observations WHERE id=? AND user_id=? AND finished_at IS NULL AND EXISTS (SELECT 1 FROM observation_cancellations WHERE id=?)',day.id,uid,cid)
+ ]);if(result[0].meta.changes!==1)throw new HttpError(409,'기록 상태가 달라졌습니다. 새로고침 후 확인해 주세요.');return {ok:true};
  }
  if(x.action==='finish'){
  const day=days.find(d=>d.id===x.id&&!d.finished_at);if(!day||day.date!==today)throw new HttpError(409,'오늘 시작한 관찰만 당일 마감할 수 있습니다. 날짜를 소급하지 않습니다.');

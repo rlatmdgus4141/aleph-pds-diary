@@ -754,11 +754,77 @@
         }
       ],
       "foreign_keys": []
+    },
+    "observation_cancellations": {
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "default": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "user_id",
+          "type": "TEXT",
+          "notnull": 1,
+          "default": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "day_id",
+          "type": "TEXT",
+          "notnull": 1,
+          "default": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "original_json",
+          "type": "TEXT",
+          "notnull": 1,
+          "default": null,
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "reason",
+          "type": "TEXT",
+          "notnull": 1,
+          "default": null,
+          "pk": 0
+        },
+        {
+          "cid": 5,
+          "name": "cancelled_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "default": null,
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        [
+          0,
+          0,
+          "auth_users",
+          "user_id",
+          "id",
+          "NO ACTION",
+          "CASCADE",
+          "NONE"
+        ]
+      ]
     }
   },
   "ownership": "plans.owner_id; dependent records scoped via joins; auth_users.id from server session only",
   "session": "SHA-256 of random 32-byte opaque cookie, 12h absolute expiry; password change revokes all; logout revokes current",
   "timezone": "Asia/Seoul",
   "unit": "minutes",
-  "observations": "immutable baseline and closed-day evidence; exactly 5 distinct dates; rule change after day2 before day3; null missing excluded from averages; mean rounded to 1 decimal; week Monday"
+  "observations": "immutable baseline and closed-day evidence; exactly 5 distinct dates; rule change after day2 before day3; null missing excluded from averages; mean rounded to 1 decimal; week Monday",
+  "observation_cancellation": "Before actual work only; unfinished same-day observation; no execution created after start; explicit reason and user confirmation; original JSON preserved and exported; finished rows cannot be cancelled",
+  "observation_order_exclusion": "Unfinished same-day observation only; server verifies at least one target execution began before baseline was fixed. Preserve original observation, matching execution snapshots and reason in observation_cancellations.original_json with exclusion_kind=start_order. Do not modify actual logs or completion state. Exclude only this invalid observation from the five-day sequence; next observation gets a new timestamp and must select work not yet performed that day."
 }

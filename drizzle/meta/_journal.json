@@ -22,6 +22,13 @@
       "when": 1790910046358,
       "tag": "0002_far_warpath",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1790911661439,
+      "tag": "0003_sparkling_living_mummy",
+      "breakpoints": true
     }
   ]
 }

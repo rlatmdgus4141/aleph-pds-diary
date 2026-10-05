@@ -1,8 +1,8 @@
 {
-  "at": "2026-10-02T03:00:05.835Z",
+  "at": "2026-10-02T03:53:19.561Z",
   "environment": "Local Node SQLite service integration; NOT browser or production HTTP; synthetic accounts and observation only",
-  "passed": 23,
-  "total": 23,
+  "passed": 28,
+  "total": 28,
   "checks": [
     {
       "name": "가입 2계정 / 같은 비밀번호의 bcrypt salt 차이",
@@ -89,7 +89,27 @@
       "status": "PASS"
     },
     {
+      "name": "완료된 할 일이 남은 선택 요청을 서버에서 거절",
+      "status": "PASS"
+    },
+    {
+      "name": "선택 실수 취소: 사유·원본 보존 / 타 계정 제외 / 같은 날 재시작",
+      "status": "PASS"
+    },
+    {
+      "name": "실행 기록이 있는 관찰은 취소 거절 / 원본 유지",
+      "status": "PASS"
+    },
+    {
       "name": "관찰 시작 전 예상 고정 / 실행 전 대상 확정 / 당일 중복 방지",
+      "status": "PASS"
+    },
+    {
+      "name": "시작 순서 오류 제외: 정상 기록은 거절 / 선행 실행 근거 보존 / 실제 자료 불변",
+      "status": "PASS"
+    },
+    {
+      "name": "마감된 관찰의 시작 순서 제외 거절",
       "status": "PASS"
     },
     {
@@ -100,8 +120,8 @@
   "evidence": [
     {
       "test_hashes": [
-        "$2b$12$IyvnQW8rJfU43k/qMjGImO7T83KeYy1GlGQAInh4JsGvy5Zh0GYbG",
-        "$2b$12$kEWyKwXmXFY3TqEzkOpP/uswyGuR5beqj3yu0xyEddAtoqV1xuYv."
+        "$2b$12$gl.vU/Bct6JUh3e/2GvQH.KvFwfd5yNI/U8UuwuqRwn7aOk10AwKq",
+        "$2b$12$VQBROax/p09M0lWv80yrcedEt..tiiaPoJ/RK0FopuaivO/QNoIaO"
       ],
       "plaintext": "[REDACTED]",
       "note": "Disposable local test accounts only; no actual user credentials."
